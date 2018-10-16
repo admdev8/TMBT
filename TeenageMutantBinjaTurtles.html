@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="Benedikt Schmotzle" />
+  <title>Teenage Mutant Binja Turtles</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="./reveal-js/css/reveal.min.css"/>
+    <style type="text/css">code{white-space: pre;}</style>
+    <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+    .slide: data-background-image="#FFFFFF"
+    </style>
+    <link rel="stylesheet" href="./reveal-js/css/theme/simple.css" id="theme">
+  <link rel="stylesheet" media="print" href="./reveal-js/css/print/pdf.css" />
+  <!--[if lt IE 9]>
+  <script src="./reveal-js/lib/js/html5shiv.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section data-background-image="./turtles.jpg">
+    <h1 class="title">Teenage Mutant Binja Turtles</h1>
+    <h2 class="author">Benedikt Schmotzle</h2>
+    <h3 class="date">Hack.lu 2018</h3>
+</section>
+
+<section class="slide level1">
+
+<h2 id="myself">Myself</h2>
+<ul>
+<li>Dedicated my (IT) life to 'memcpy'</li>
+<li>Besides: climber and musician</li>
+<li>! Speaking not for my employer</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<h2 id="binary-ninja">Binary Ninja</h2>
+<p>https://binary.ninja/</p>
+<ul>
+<li>Cross platform reversing: Linux, OSX, Windows</li>
+<li>Supported architectures: X86/ARM/MIPS/...</li>
+<li>Intermediate Languages (low, medium, ...)</li>
+<li>GUI / (headless)</li>
+<li>cheaper than IDA...</li>
+<li>nice Python API!</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<h2 id="api">API</h2>
+<p>https://api.binary.ninja/</p>
+<p>https://github.com/Vector35/binaryninja-api</p>
+<p>https://github.com/Vector35/community-plugins/tree/master/plugins</p>
+</section>
+<section class="slide level1">
+
+<h2 id="plugin-paths">Plugin paths</h2>
+<ul>
+<li>Windows
+<ul>
+<li><code>%APPDATA%/Binary Ninja/plugins</code></li>
+</ul></li>
+<li>Linux
+<ul>
+<li><code>$HOME/.binaryninja/plugins</code></li>
+</ul></li>
+<li>OSX
+<ul>
+<li><code>~/Library/Application Support/Binary Ninja/plugins</code></li>
+</ul></li>
+</ul>
+</section>
+<section class="slide level1">
+
+<h2 id="better-debugging-using-ipython">Better debugging using IPython</h2>
+<p><em>Linux only for now..</em></p>
+<p>https://github.com/ernw/binja-ipython</p>
+</section>
+<section class="slide level1">
+
+<h2 id="api-basics">API Basics</h2>
+<pre class="sourceCode python"><code class="sourceCode python">here <span class="co"># get address at cursor</span>
+
+<span class="dt">print</span>(<span class="dt">hex</span>(here)) <span class="co"># print address in hex</span></code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="binary-views">Binary Views</h2>
+<pre class="sourceCode python"><code class="sourceCode python">bv = BinaryViewType[<span class="st">&#39;ELF&#39;</span>].<span class="dt">open</span>(<span class="st">&quot;/bin/ls&quot;</span>)</code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="sections">Sections</h2>
+<pre class="sourceCode python"><code class="sourceCode python">bv.sections.keys()
+<span class="co"># [&#39;.dynstr&#39;, &#39;.text&#39;, ...]</span>
+
+bv.sections[<span class="st">&#39;.text&#39;</span>]
+<span class="co"># &lt;section .text: 0x402a00-0x413c59&gt;</span>
+
+bv.sections[<span class="st">&#39;.text&#39;</span>].start
+<span class="co"># 4205056L</span>
+
+bv.sections[<span class="st">&#39;.text&#39;</span>].end
+<span class="co"># 4275289L</span></code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="symbols">Symbols</h2>
+<pre class="sourceCode python"><code class="sourceCode python">bv.symbols
+<span class="co"># {...&#39;puts@GOT&#39;: &lt;SymbolType.ImportAddressSymbol: </span>
+<span class="co">#            &quot;puts@GOT&quot; @ 0x804a010&gt;, ... }</span>
+
+bv.get_symbol_at(<span class="bn">0x804a010</span>)
+<span class="co"># &lt;SymbolType.ImportAddressSymbol: &quot;puts@GOT&quot; @ 0x804a010&gt;</span>
+
+bv.get_symbol_by_raw_name(<span class="st">&#39;puts&#39;</span>)
+<span class="co"># &lt;SymbolType.ImportedFunctionSymbol: &quot;puts&quot; @ 0x8048330&gt;</span></code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="architecture">Architecture</h2>
+<pre class="sourceCode python"><code class="sourceCode python">bv.arch 
+<span class="co"># &lt;arch: x86_64&gt;</span>
+
+bv.arch.endianness 
+<span class="co"># &lt;Endianness.LittleEndian: 0&gt;</span>
+
+bv.arch.address_size 
+<span class="co"># 8L</span>
+bv.arch.calling_conventions
+<span class="co"># { &#39;win64&#39;: &lt;calling convention: x86_64 win64&gt;, </span>
+<span class="co">#   &#39;sysv&#39;: &lt;calling convention: x86_64 sysv&gt;, </span>
+<span class="co">#&#39;linux-syscall&#39;: &lt;calling convention: x86_64 linux-syscall&gt;}</span>
+
+bv.arch.calling_conventions[<span class="st">&#39;sysv&#39;</span>].int_arg_regs
+<span class="co"># [&#39;rdi&#39;, &#39;rsi&#39;, &#39;rdx&#39;, &#39;rcx&#39;, &#39;r8&#39;, &#39;r9&#39;]</span>
+
+bv.arch.calling_conventions[<span class="st">&#39;sysv&#39;</span>].int_return_reg
+<span class="co"># &#39;rax&#39;</span></code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="disassembling">(Dis)assembling</h2>
+<pre class="sourceCode python"><code class="sourceCode python">bv.get_disassembly(t.start)
+<span class="co"># &#39;push    r15&#39;</span>
+
+bv.arch.assemble(<span class="st">&quot;push r15&quot;</span>)
+<span class="co"># (&#39;AW&#39;, &#39;&#39;))</span></code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="functions">Functions</h2>
+<pre class="sourceCode python"><code class="sourceCode python">bv.functions
+<span class="co"># [&lt;func: x86_64@0x4022b8&gt;, ..., &lt;func: x86_64@0x413c5c&gt;]</span>
+
+<span class="co"># Get function at address</span>
+bv.get_functions_containing(<span class="bn">0x413871</span>)[<span class="dv">0</span>]
+<span class="co"># &lt;func: x86_64@0x413b9c&gt;</span>
+
+bv.functions[<span class="dv">0</span>].name
+<span class="co"># &quot;_init&quot;</span>
+
+bv.functions[<span class="dv">0</span>].<span class="dt">vars</span>
+<span class="co"># [&lt;var void var_8&gt;, ...]</span>
+
+bv.functions[<span class="dv">0</span>].basic_blocks
+<span class="co"># [&lt;block: x86_64@0x4022b8-0x4022c8&gt;, ... ]</span>
+
+<span class="kw">for</span> func in bv.functions:
+   <span class="co"># do something</span></code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="making-comments">Making comments</h2>
+<pre class="sourceCode python"><code class="sourceCode python">f0 = bv.functions[<span class="dv">0</span>]
+
+<span class="co"># set_comment_at(address, comment)</span>
+f0.set_comment_at(f.start, <span class="st">&quot;beginning of function&quot;</span>)
+
+f0.comments
+<span class="co"># {4203192L: &#39;beginning of function&#39;}</span></code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="basic-blocks">Basic blocks</h2>
+<pre class="sourceCode python"><code class="sourceCode python">b2 = f0.basic_blocks[<span class="dv">2</span>]
+
+b2.outgoing_edges
+<span class="co"># [&lt;UnconditionalBranch: x86_64@0x4022cd&gt;]</span>
+
+b2.incoming_edges
+<span class="co"># [&lt;FalseBranch: x86_64@0x4022c8&gt;]</span>
+
+b2.set_user_highlight(
+    HighlightStandardColor.BlueHighlightColor)
+    
+<span class="kw">for</span> bb in f0.basic_blocks:
+  <span class="co"># do something</span></code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="instructions">Instructions</h2>
+<pre class="sourceCode python"><code class="sourceCode python">bb.disassembly_text
+<span class="co"># [&lt;0x406d60: sub_406d60:&gt;, </span>
+<span class="co"># &lt;0x406d60: push    r15 {var_8}&gt;, </span>
+<span class="co"># ...]</span>
+
+bb.disassembly_text[<span class="dv">1</span>].tokens
+<span class="co"># [&#39;push&#39;, &#39;    &#39;, &#39;r15&#39;, &#39; {&#39;, &#39;var_8&#39;, &#39;}&#39;]</span>
+
+f0.set_user_instr_highlight(f0.start, 
+    highlight.HighlightColor(red=<span class="bn">0xff</span>, blue=<span class="bn">0xff</span>, green=<span class="dv">0</span>))
+    </code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="crossreferences">Crossreferences</h2>
+<pre class="sourceCode python"><code class="sourceCode python"><span class="co"># Get address of strcpy</span>
+a = bv.get_symbols_by_name(<span class="st">&quot;strcpy&quot;</span>)[<span class="dv">0</span>].address
+
+<span class="co"># Search xrefs</span>
+bv.get_code_refs(a)
+<span class="co"># [&lt;ref: x86_64@0x406e51&gt;, ...]</span>
+
+<span class="co"># Map xref to function</span>
+r1 = bv.get_code_refs(a)[<span class="dv">0</span>]
+bv.get_functions_containing(r1.address)[<span class="dv">0</span>].name
+<span class="co"># sub_406d60</span></code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="binary-ninja-intermediate-languages">Binary Ninja Intermediate Languages</h2>
+<ul>
+<li>Human readable</li>
+<li>Computer understandable (SSA)</li>
+<li>Easy to lift</li>
+<li>Easy to translate</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<h2 id="low-level-intermediate-language-llil">Low level Intermediate Language (LLIL)</h2>
+<p>https://docs.binary.ninja/dev/bnil-llil/ https://github.com/withzombies/bnil-graph</p>
+<ul>
+<li>Close to asm</li>
+<li>Eliminate side effects</li>
+<li>Eliminate nops</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<pre><code>0   0x4005c7    push rbp
+1   0x4005c8    mov rbp, rsp
+2   0x4005cb    sub rsp, 0x20
+3   0x4005cf    mov dword [rbp-0x14], edi
+4   0x4005d2    mov qword [rbp-0x20], rsi
+5   0x4005d6    rax = [rbp - 0x20 {var_28}].q
+6   0x4005da    mov rdi, rax
+7   0x4005dd    call atoi
+8   0x4005e2    mov dword [rbp-0x4], eax
+...</code></pre>
+<pre><code>0   0x4005c7    push(rbp)
+1   0x4005c8    rbp = rsp {__saved_rbp}
+2   0x4005cb    rsp = rsp - 0x20
+3   0x4005cf    [rbp - 0x14 {var_1c}].d = edi
+4   0x4005d2    [rbp - 0x20 {var_28}].q = rsi
+5   0x4005d6    rax = [rbp - 0x20 {var_28}].q
+6   0x4005da    rdi = rax
+7   0x4005dd    call(atoi) ## 0x4004a0
+8   0x4005e2    [rbp - 4 {var_c}].d = eax
+...</code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="working-with-llil">Working with LLIL</h2>
+<pre class="sourceCode python"><code class="sourceCode python">f1.get_regs_written_by(f1.low_level_il[<span class="dv">7</span>].address)
+<span class="co"># [&#39;rax&#39;, &#39;rcx&#39;, &#39;rdx&#39;, &#39;rsi&#39;, &#39;rdi&#39;, &#39;r8&#39;, &#39;r9&#39;, &#39;r10&#39;, </span>
+<span class="co"># &#39;r11&#39;, &#39;xmm0&#39;, &#39;xmm1&#39;, &#39;xmm2&#39;, &#39;xmm3&#39;, &#39;xmm4&#39;, &#39;xmm5&#39;, </span>
+<span class="co"># &#39;xmm6&#39;, &#39;xmm7&#39;, &#39;xmm8&#39;, &#39;xmm9&#39;, &#39;xmm10&#39;, &#39;xmm11&#39;, &#39;xmm12&#39;, </span>
+<span class="co"># &#39;xmm13&#39;, &#39;xmm14&#39;, &#39;xmm15&#39;]</span>
+
+f1.low_level_il[<span class="dv">2</span>]
+<span class="co"># &lt;il: r14d = r8d&gt;</span>
+
+f1.low_level_il[<span class="dv">2</span>].operation
+<span class="co"># &lt;LowLevelILOperation.LLIL_SET_REG: 1&gt;</span>
+
+bv.arch.get_low_level_il_from_bytes(<span class="st">&quot;</span><span class="ch">\x90\x90</span><span class="st">&quot;</span>, <span class="bn">0x0</span>)
+<span class="co"># &lt;il: nop&gt;</span>
+
+<span class="kw">for</span> bb in f1.low_level_il:
+  <span class="kw">for</span> ins in bb:
+    <span class="co"># do something</span></code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="llil-operands">LLIL Operands</h2>
+<pre class="sourceCode python"><code class="sourceCode python">f1.low_level_il[<span class="dv">2</span>].operands
+<span class="co"># [r14d, &lt;il: r8d&gt;]</span>
+
+f1.low_level_il[<span class="dv">2</span>].operands[<span class="dv">0</span>].info
+<span class="co"># &lt;reg: size 4, offset 0 in r14, zero extend&gt;</span>
+
+f1.low_level_il[<span class="dv">2</span>].operands[<span class="dv">1</span>].operation
+<span class="co"># &lt;LowLevelILOperation.LLIL_REG: 10&gt;</span>
+
+f1.low_level_il[<span class="dv">2</span>].operands[<span class="dv">1</span>].possible_values
+<span class="co"># &lt;unsigned ranges: [&lt;range: 0x0 to 0xffffffff&gt;]&gt;</span></code></pre>
+</section>
+<section class="slide level1">
+
+<p>Some LLIL instruction types..</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LLIL_CALL</td>
+<td style="text-align: left;">Call to function</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LLIL_CMP_E, LLIL_CMP_NE</td>
+<td style="text-align: left;">(non) Equality comparison</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LLIL_CMP_SGE</td>
+<td style="text-align: left;">Signed greater or equal comparison</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LLIL_CMP_UGT</td>
+<td style="text-align: left;">Unsigned greater than comparison</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LLIL_SET_REG</td>
+<td style="text-align: left;">LLIL register assignment</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LLIL_PUSH</td>
+<td style="text-align: left;">LLIL push to stack</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LLIL_POP</td>
+<td style="text-align: left;">LLIL pop from stack</td>
+</tr>
+</tbody>
+</table>
+<p>Full list at: https://api.binary.ninja/binaryninja.enums.LowLevelILOperation.html?highlight=lowleveliloperation</p>
+</section>
+<section class="slide level1">
+
+<h2 id="medium-level-intermediate-language-mlil">Medium level Intermediate Language (MLIL)</h2>
+<p>Stack/Memory usage resolved Types added</p>
+<pre class="sourceCode python"><code class="sourceCode python">f1.medium_level_il[<span class="dv">3</span>]
+<span class="co"># &lt;il: if (rax.eax == 0) then 4 @ 0x8fd else 5 @ 0x8e5&gt;</span>
+
+f1.medium_level_il[<span class="dv">0</span>].dest.<span class="dt">type</span>
+<span class="co">#&lt;type: int32_t, 0% confidence&gt;</span></code></pre>
+</section>
+<section class="slide level1">
+
+<p>MLIL instruction mostly equal to LLIL</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MLIL_IF</td>
+<td style="text-align: left;">if condition</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MLIL_SYSCALL</td>
+<td style="text-align: left;">syscall instruction</td>
+</tr>
+</tbody>
+</table>
+<p>Full list at: https://api.binary.ninja/binaryninja.enums-module.html?highlight=mlil#binaryninja.enums.MediumLevelILOperation</p>
+</section>
+<section id="background-tasks" class="slide level1">
+<h1>Background tasks</h1>
+<pre class="sourceCode python"><code class="sourceCode python"><span class="kw">class</span> DoSomethingAs(BackgroundTaskThread):
+      <span class="kw">def</span> <span class="ot">__init__</span>(<span class="ot">self</span>, view):
+        BackgroundTaskThread.<span class="ot">__init__</span>(<span class="ot">self</span>, <span class="st">&quot;&quot;</span>, <span class="ot">True</span>)
+        <span class="ot">self</span>.progress = <span class="st">&quot;Doing something...&quot;</span>
+        <span class="ot">self</span>.view = view
+        
+      <span class="kw">def</span> doSomething():
+        ...</code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="writing-plugins">Writing Plugins</h2>
+<p><em>plugin.json</em></p>
+<pre class="sourceCode json"><code class="sourceCode json">
+{
+    <span class="dt">&quot;plugin&quot;</span>: {
+        <span class="dt">&quot;name&quot;</span>: <span class="st">&quot;msdn&quot;</span>,
+        <span class="dt">&quot;type&quot;</span>: [<span class="st">&quot;ui&quot;</span>],
+        <span class="dt">&quot;api&quot;</span>: <span class="st">&quot;python2&quot;</span>,
+        <span class="dt">&quot;description&quot;</span>: <span class="st">&quot;Search MSDN api reference&quot;</span>,
+        <span class="dt">&quot;longdescription&quot;</span>: <span class="st">&quot;...&quot;</span>,
+        <span class="dt">&quot;license&quot;</span>: {
+            <span class="dt">&quot;name&quot;</span>: <span class="st">&quot;MIT&quot;</span>
+        },
+        <span class="dt">&quot;version&quot;</span>: <span class="st">&quot;0.0.1&quot;</span>,
+        <span class="dt">&quot;author&quot;</span>: <span class="st">&quot;Benedikt Schmotzle&quot;</span>
+    }
+}</code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="init.py"><strong>init</strong>.py</h2>
+<pre class="sourceCode python"><code class="sourceCode python"><span class="ch">from</span> binaryninja <span class="ch">import</span> *
+
+<span class="kw">def</span> search_and_render(bv):
+    ...
+
+<span class="kw">def</span> search_and_render_addr(bv, address):
+    ...
+
+<span class="co"># register plugin</span>
+PluginCommand.register(<span class="st">&quot;Search MSDN&quot;</span>, 
+<span class="co">&quot;Searches the MSDN Api and ...&quot;</span>,
+search_and_render)
+
+PluginCommand.register_for_address(
+<span class="st">&#39;Search MSDN from instruction&#39;</span>, 
+<span class="co">&#39;Search MSDN for call from instruction&#39;</span>, 
+search_and_render_addr)</code></pre>
+</section>
+<section class="slide level1">
+
+<h2 id="ui">UI</h2>
+<pre class="sourceCode python"><code class="sourceCode python">
+c = ChoiceField(<span class="st">&#39;Do it?&#39;</span>, [<span class="st">&#39;Yes&#39;</span>, <span class="st">&#39;No&#39;</span>])
+a = AddressField(<span class="st">&#39;Enter address&#39;</span>)
+get_form_input([c, a], <span class="st">&quot;Window title&quot;</span>)
+
+<span class="dt">print</span>(c.result)
+<span class="dt">print</span>(a.result)</code></pre>
+<pre class="sourceCode python"><code class="sourceCode python">show_message_box(
+ <span class="st">&quot;BoxTitle&quot;</span>, 
+ <span class="co">&quot;BoxMessage&quot;</span>
+)</code></pre>
+</section>
+<section class="slide level1">
+
+<h3 id="other-fields">Other fields</h3>
+<p>https://api.binary.ninja/binaryninja.interaction-module.html</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">DirectoryNameField</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">IntegerField</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">OpenFileNameField</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LineField</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MultilineField</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SaveFileNameField</td>
+<td style="text-align: left;"></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="slide level1">
+
+<h2 id="ctf">CTF</h2>
+<p>@ <code>http://&lt;IP&gt;</code></p>
+</section>
+<section class="slide level1">
+
+<h2 id="further-reading">Further reading</h2>
+<p>https://binary.ninja/2017/04/17/BNIL-Series-Part-1.html https://www.sophia.re/Binary-Rockstar/index.html https://blog.trailofbits.com/2018/04/04/vulnerability-modeling-with-binary-ninja/</p>
+</section>
+<section class="slide level1">
+
+<h2 id="questions">Questions?</h2>
+</section>
+<section class="slide level1">
+
+<h2 id="thank-you">Thank you</h2>
+</section>
+    </div>
+  </div>
+
+  <script src="./reveal-js/lib/js/head.min.js"></script>
+  <script src="./reveal-js/js/reveal.min.js"></script>
+
+  <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        theme: 'night', // available themes are in /css/theme
+        transition: 'None', // default/cube/page/concave/zoom/linear/fade/none
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: './reveal-js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: './reveal-js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+          { src: './reveal-js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+//          { src: './reveal-js/plugin/search/search.js', async: true, condition: function() { return !!document.body.classList; }, }
+//          { src: './reveal-js/plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+]});
+    </script>
+  </body>
+</html>
